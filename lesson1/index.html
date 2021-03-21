@@ -127,6 +127,8 @@
 ## Lesson Topics
 
 * Prices and Oracles
+* Averages and Accumulators
+* Uniswap
 
 </script></section>
 
@@ -193,8 +195,6 @@
 
 
 
-
-
 <section data-markdown><script type="text/template">
 
 ## Competition or collusion?
@@ -213,6 +213,20 @@
 * So if you see similar prices, it must be a competitive market right?
 * Not necessarily: They could be colluding together to keep the price high
   * Price fixing
+  * Cartels
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Marginal Prices
+
+* When you buy in bulk, it's cheaper right?
+* Not so on financial markets:
+  * There is usually a small amount available at a good price, and more at a worse price
+* "Marginal price" is the price for the smallest (maybe infinitesimal) size you can buy
 
 </script></section>
 
@@ -256,7 +270,11 @@
 
 <section data-markdown><script type="text/template">
 
-##
+## LIBOR
+
+* London Inter-bank Offered Rate
+* Banks submit their claimed lending costs, which are aggregated into the LIBOR by an association
+* 2008 scandal: Banks were manipulating their submissions because they had derivative positions on the LIBOR
 
 </script></section>
 
@@ -264,7 +282,24 @@
 
 <section data-markdown><script type="text/template">
 
-##
+## On-chain Price Feeds
+
+* Rather than taking prices from off-chain markets, can we use the prices from on-chain trading?
+* These can provide "objective" prices
+  * Driven by arbitrage, not oracles
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Flash Loans
+
+* Imagine you write a cheque to buy something, then you sell it for a profit and receive a new cheque
+* As long as you deposit your new cheque before the cheque you wrote clears, you don't need any balance in your account!
 
 </script></section>
 
@@ -272,9 +307,338 @@
 
 <section data-markdown><script type="text/template">
 
-##
+## Flash Loans on Ethereum
+
+* On Ethereum, it works like this:
+  * You request a contract to send you some ETH or tokens
+  * It does, and then invokes a callback into your code
+  * When the callback returns, the contract verifies that the funds were returned (usually plus a fee)
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Example Flash Lender
+
+    function flashLoan(uint amount) {
+        uint origBalance = this.balance;
+
+        msg.sender.transfer(amount);
+
+        // Invoke a function on the caller
+        IFlashLoan(msg.sender).onFlashLoan();
+
+        // Make sure the function paid us back
+        require(this.balance >= origBalance);
+    }
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Snapshot Problem
+
+* On-chain prices must be used with care
+  * They can often be manipulated
+* Attackers can make a big trade to move the price, then call your contract which reads the bad price, then make a trade to move the price back
+  * *All within the same transaction*
+  * Flash loans make this worse: They don't even need capital to do this
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## 15 minute break
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Solution to the snapshot problem
+
+* One solution to the snapshot problem is to not use instantaneous prices
+* Instead use the price averaged over some time period
+  * Attacker would have to hold the price at a bad level for period of time
+  * Vulnerable to arbitrage while doing this
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Impulse
+
+Imagine an asset's price is flat, and then spikes up momentarily, and then spikes back down:
+
+<img style="background-color: white; border: 0; padding: 40px" src="impulse.svg" />
+
+* This is called an "impulse"
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Moving Average
+
+* If we transform this price data and make every point the average of the previous N points:
+ 
+<img style="background-color: white; border: 0; padding: 40px" src="moving-average-impulse.svg" />
+
+* This is the "impulse response"
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Impulse Response 
+
+<img style="background-color: white; border: 0; padding: 40px" src="moving-average-impulse.svg" />
+
+* Suppose N=10
+  * 1/10th the height of the impulse
+  * After the N points pass, the price level returns to what it was before
+    * "Finite Impulse Response"
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Step
+
+Now imagine the price jumps to a new level and stays there:
+
+<img style="background-color: white; border: 0; padding: 40px" src="step.svg" />
+
+* This is called a "step"
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Step Response
+
+And this is how our moving average responds to a step: 
+
+<img style="background-color: white; border: 0; padding: 40px" src="step-response.svg" />
+
+* Step response is the integral of the impulse response
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Features of Moving Averages
+
+* Abrupt changes to the price take some time to be reflected in the average
+* After the window elapses, historical prices have no effect on the new prices (FIR)
+* Very efficient to compute
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Recursive computation
+
+Imagine we want to keep an average of last 10 elements. Keep a running sum:
+
+<img style="background-color: white; border: 0; padding: 40px" src="moving-average-recursive.svg" />
+
+* Adding new element just needs 1 subtraction and 1 addition
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Uniswap2 TWAP
+
+* Uniswap 2 works by keeping a running sum of the price
+* Every second the current price is added to the sum
+  * This sum is known as an "accumulator"
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Recursive computation of TWAP
+
+If you have 2 accumulator snapshots, subtract to get the sum of prices between them:
+
+<img style="background-color: white; border: 0; padding: 40px" src="moving-average-recursive2.svg" />
+
+* Then divide by the time between snapshots to get average price
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## TWAP Example
+
+Suppose we have the following price movements:
+
+<img style="background-color: white; border: 0; padding: 40px" src="uniswap-twap1.svg" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## TWAP Example, 2
+
+This is what the accumulator looks like:
+
+<img style="background-color: white; border: 0; padding: 40px" src="uniswap-twap2.svg" />
+
+* The higher the price, the steeper the accumulator increase
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## TWAP Example, 3
+
+Subtract 2 snapshots:
+
+<img style="background-color: white; border: 0; padding: 40px" src="uniswap-twap3.svg" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Geometric Averages
+
+* Another type of moving average uses the product of the prices, and then the nth root
+* Advantage: Averages of inverses = inverse of average
+  * Uniswap 2 uses normal moving average so has to keep two separate moving averages
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## 15 minute break
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Automated Market Makers
+
+* An AMM is a special contract that buys and sells an asset according to specific rules
+* Uniswap is most famous example on Ethereum
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Constant Product Rule
+
+* Uniswap has a simple rule: The product of the amounts of the assets is a constant
+      x * y = k
+* You can swap an amount of token for another amount, but you need to keep the product the same
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Constant Product Rule, 2
+
+* Suppose there are 10 of token A and 4 of token B
+      k = 10 * 4 = 40
+* The marginal price of A in units of B is
+      4 / 10 = 0.4
+* The marginal price of B in units of A is
+      10 / 4 = 2.5
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Constant Product Rule, 3
+
+* I want to buy 2 units of A
+* Now there are 8 As. How many Bs should there be?
+      8 * B = 40
+      B = 40 / 8 = 5
+* So, I need to deposit 1 unit of B to bring it up to 5
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Constant Product Rule, 4
+
+* Now there are 8 of token A and 5 of token B
+      k = 8 * 5 = 40
+* The marginal price of A in units of B goes up:
+      5 / 8 = 0.625
+* The marginal price of B in units of A goes down:
+      8 / 5 = 1.6
+
+</script></section>
+
+
+
+
+
+
 
 
 
