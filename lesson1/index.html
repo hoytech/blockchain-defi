@@ -112,7 +112,7 @@
 
 ## DeFi
 
-### Lesson 1: Uniswap
+### Lesson 1: Prices, Oracles, and Uniswap
 
 *Doug Hoyte, March 2021*
 
@@ -152,8 +152,8 @@
 ## Social benefit of markets
 
 * Even if you aren't buying or selling, prices are valuable signals
-* Helps people plan economic activity
-* Free side benefit of markets
+* Trusted, publically visible pricing This is a positive externality of markets
+  * Helps people plan economic activity
 
 </script></section>
 
@@ -164,7 +164,7 @@
 ## Fungible Assets
 
 * Assets where every unit is interchangeable with any other
-* You don't care which dollar bill you have, or which stock of a company
+* You don't care which dollar bill you have, or exactly which shares of a company
 
 </script></section>
 
@@ -234,7 +234,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Need for prices
+## Prices in Smart Contracts
 
 * Smart contracts often need prices
   * To know a fair cost to charge for a service, or pay for an input
@@ -250,7 +250,7 @@
 ## Oracles
 
 * Smart contracts only have access to state already on the blockchain, or passed in via a transaction
-* "Oracle" is the name for a method that a smart contract can get a price
+* "Oracle" is the name for a method that a smart contract uses to get a price
 
 </script></section>
 
@@ -310,9 +310,9 @@
 ## Flash Loans on Ethereum
 
 * On Ethereum, it works like this:
-  * You request a contract to send you some ETH or tokens
-  * It does, and then invokes a callback into your code
-  * When the callback returns, the contract verifies that the funds were returned (usually plus a fee)
+  * A borrower requests a lending contract to send some ETH or tokens
+  * The lender sends the tokens, then invokes a callback into the borrower's code
+  * When the borrower's callback returns, the lender verifies that the funds were returned (plus fees)
 
 </script></section>
 
@@ -347,7 +347,8 @@
   * They can often be manipulated
 * Attackers can make a big trade to move the price, then call your contract which reads the bad price, then make a trade to move the price back
   * *All within the same transaction*
-  * Flash loans make this worse: They don't even need capital to do this
+    * Risk-free
+  * Flash loans make this worse: Attackers don't even need capital to do this
 
 </script></section>
 
@@ -371,7 +372,7 @@
 * One solution to the snapshot problem is to not use instantaneous prices
 * Instead use the price averaged over some time period
   * Attacker would have to hold the price at a bad level for period of time
-  * Vulnerable to arbitrage while doing this
+  * But attacker is vulnerable to arbitrage while doing this
 
 </script></section>
 
@@ -416,7 +417,7 @@ Imagine an asset's price is flat, and then spikes up momentarily, and then spike
 <img style="background-color: white; border: 0; padding: 40px" src="moving-average-impulse.svg" />
 
 * Suppose N=10
-  * 1/10th the height of the impulse
+  * Response is 1/10th the height of the impulse
   * After the N points pass, the price level returns to what it was before
     * "Finite Impulse Response"
 
@@ -443,7 +444,7 @@ Now imagine the price jumps to a new level and stays there:
 
 ## Step Response
 
-And this is how our moving average responds to a step: 
+This is how our moving average responds to a step: 
 
 <img style="background-color: white; border: 0; padding: 40px" src="step-response.svg" />
 
@@ -461,6 +462,7 @@ And this is how our moving average responds to a step:
 * Abrupt changes to the price take some time to be reflected in the average
 * After the window elapses, historical prices have no effect on the new prices (FIR)
 * Very efficient to compute
+  * Recursively
 
 </script></section>
 
@@ -471,7 +473,7 @@ And this is how our moving average responds to a step:
 
 ## Recursive computation
 
-Imagine we want to keep an average of last 10 elements. Keep a running sum:
+Imagine we want to keep an average of the last 10 elements. Keep a running sum:
 
 <img style="background-color: white; border: 0; padding: 40px" src="moving-average-recursive.svg" />
 
@@ -489,6 +491,7 @@ Imagine we want to keep an average of last 10 elements. Keep a running sum:
 * Uniswap 2 works by keeping a running sum of the price
 * Every second the current price is added to the sum
   * This sum is known as an "accumulator"
+  * Doesn't actually run every second, just simulated when contract is interacted with
 
 </script></section>
 
@@ -498,7 +501,7 @@ Imagine we want to keep an average of last 10 elements. Keep a running sum:
 
 ## Recursive computation of TWAP
 
-If you have 2 accumulator snapshots, subtract to get the sum of prices between them:
+If you have 2 accumulator snapshots, subtract them to get the sum of prices between:
 
 <img style="background-color: white; border: 0; padding: 40px" src="moving-average-recursive2.svg" />
 
@@ -529,7 +532,7 @@ This is what the accumulator looks like:
 
 <img style="background-color: white; border: 0; padding: 40px" src="uniswap-twap2.svg" />
 
-* The higher the price, the steeper the accumulator increase
+* The higher the price, the steeper the slope of the accumulator
 
 </script></section>
 
@@ -539,7 +542,7 @@ This is what the accumulator looks like:
 
 ## TWAP Example, 3
 
-Subtract 2 snapshots:
+Subtract 2 snapshots to get area:
 
 <img style="background-color: white; border: 0; padding: 40px" src="uniswap-twap3.svg" />
 
@@ -555,6 +558,7 @@ Subtract 2 snapshots:
 * Another type of moving average uses the product of the prices, and then the nth root
 * Advantage: Averages of inverses = inverse of average
   * Uniswap 2 uses normal moving average so has to keep two separate moving averages
+* Also matches log-normal price models, which some people use to model trading activity
 
 </script></section>
 
@@ -611,11 +615,12 @@ Subtract 2 snapshots:
 
 ## Constant Product Rule, 3
 
-* I want to buy 2 units of A
-* Now there are 8 As. How many Bs should there be?
+* I want to buy exactly 2 units of A so I withdraw 2 A tokens from reserves, leaving 8 A tokens
+* How many Bs must there now be?
       8 * B = 40
-      B = 40 / 8 = 5
-* So, I need to deposit 1 unit of B to bring it up to 5
+      B = 40 / 8
+      B = 5
+* Since B started at 4 tokens I need to deposit 1 unit of B to bring it up to 5
 
 </script></section>
 
@@ -626,6 +631,7 @@ Subtract 2 snapshots:
 ## Constant Product Rule, 4
 
 * Now there are 8 of token A and 5 of token B
+* `k` remains 40 <span style="margin-left: 20px; color: green; font-size: 120%">&check;</span>:
       k = 8 * 5 = 40
 * The price of A in units of B goes up:
       5 / 8 = 0.625
@@ -639,17 +645,42 @@ Subtract 2 snapshots:
 
 <section data-markdown><script type="text/template">
 
-## Constant Product Rule, 5
+## Slippage
 
 * We said the price of A in B was 0.4
 * But we paid 1 B for 2 As, meaning price was 0.5
-  * Why?
   * 0.4 was the *marginal* price (price for smallest amount possible)
   * The more you buy the worse your average price will be
+    * "*slippage*"
 
 </script></section>
 
 
+
+
+<section data-markdown><script type="text/template">
+
+## Decimal Scaling
+
+* In solidity, division is always integer division (truncates decimals)
+* Example: `4 ether / 10 ether = 0` (!)
+* To get around this, first scale by decimal precision (usually `1e18`):
+
+      function getPriceOfA() external view returns (uint) {
+          return reserveB * 1e18 / reserveA;
+      }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Lab 1: My Uniswap
+
+[myuniswap.html](myuniswap.html)
+
+</script></section>
 
 
 
