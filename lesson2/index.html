@@ -235,6 +235,46 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 <section data-markdown><script type="text/template">
 
+## Interest Accumulators
+
+* In a smart contract, we cannot update each user's balance to pay out interest
+* Instead, usual way is to keep an accumulator
+  * Multiplicative accumulator: Every update it is multiplied by the interest earned since last update
+* Each user's balance is stored along with their own accumulator
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Interest Accumulator Example
+
+1. Accumulator is at `2.1`
+1. User A invests 100. State: `(100, 2.1)`
+1. Some time passes, and 1% interest accrued
+1. Accum updated: `2.1 * 1.01 = 2.121`
+1. User B invests 50, State: `(50, 2.121)`
+1. More time passes, and 3% interest accrued
+1. Accum updated: `2.121 * 1.03 = 2.18463`
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Interest Accumulator Example 2
+
+* User A's balance:<br/> `100 * 2.18463 / 2.1 = 104.03`
+* User B's balance:<br/> `50 * 2.18463 / 2.121 = 51.5`
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
 ## Repeated Squaring in Binary
 
 * Notice in repeated squaring we need to keep halving the exponent until we get down to 1
@@ -242,7 +282,7 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 * Computers store numbers in binary so exponent is already in the right format for us
   * Just need to loop over the bits!
 * Advanced modern computer algorithm right?
-  * LOL no: described in Hindu text circa 200 BC
+  * Not so: described in Hindu text circa 200 BC
 
 </script></section>
 
@@ -287,11 +327,116 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 </script></section>
 
 
+
 <section data-markdown><script type="text/template">
 
-## Compound (the project)
+## Collateralised Lending
+
+* On the blockchain, there is no way to repossess tokens transferred to a user
+* Such loans must be fully collateralised
+  * Often over-collateralized
+* If the prices move against the borrower, their collateral is sold off to recover borrowed assets
+  * "Liquidation"
+  * Protects lenders
+
+</script></section>
 
 
+
+<section data-markdown><script type="text/template">
+
+## Collateral Factor
+
+* In order to ensure that liquidation can happen reliably, there is a safety buffer called a collateral factor
+* You can borrow assets worth your collateral's value times its collateral factor
+* Example: If DAI's collateral factor is 0.75, and you deposit 1000 DAI, you can borrow up to $750 worth of assets
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Re-supplying Collateral
+
+* If loans must be over-collateralised, how is leverage possible?
+* Take example from previous slide:
+  * Borrow $750 of ETH, sell it for DAI
+  * Deposit that fresh DAI as more collateral
+  * Now you have $1750 worth of collateral deposited
+  * Can borrow up to `1750 * .75 = 1312.5`
+  * Repeat
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Re-supplying Collateral
+
+* You can repeat this until your total DAI collateral is `1000 / (1 - 0.75) = 4000`
+* You will have sold $3000 worth of ETH
+  * Short ETH at 3:1 leverage
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Using Flash Loans
+
+* Rather than repeating this many times, simply use a flash loan:
+1. Flash borrow 4000 DAI, deposit it as collateral
+1. Borrow $3000 worth of ETH
+1. Sell this ETH for DAI, giving you `3000 + 1000 = 4000` DAI
+1. Pay back the flash loan
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Profit Example
+
+* Suppose the price of ETH falls: Amount you could buy for 1000 DAI you can now get for only 800:
+1. Flash borrow amount of ETH you owe: `3000 * .8 = 2400`
+1. Pay back all the ETH you owe
+1. Withdraw 4000 DAI collateral
+1. Convert $2400 worth to ETH, repay flash loan
+1. Profit is 600 DAI (3x the 200 you would've earned without leverage)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Loss Example
+
+* Suppose instead the price of ETH rises: Amount you could buy for 1000 DAI you now need 1200:
+* The $3000 of ETH is now worth 3600
+* Implied collateral factor of 0.9: *in violation*!
+1. Liquidators seize 3600 DAI of your collateral, sell it for ETH, and give this back to lenders
+1. You are left with 400 DAI collateral: 600 DAI loss
+
+</script></section>
+
+
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Lending Markets on Ethereum
+
+* MakerDAO: Lets you borrow DAI against ETH collateral. Tries to maintain DAI pegged to US Dollar
+* Compound: Borrow/lend ~20 assets. Uses custom off-chain oracle
+* AAVE: Borrow/lend ~40 assets. Chainlink oracle
+* Euler: Borrow/lend any ERC-20 asset, Uniswap TWAP Oracle (coming soon)
 
 </script></section>
 
