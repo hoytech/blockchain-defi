@@ -130,6 +130,21 @@
 
 
 
+
+<section data-markdown><script type="text/template">
+
+## Time Value of Money
+
+* Would you rather have <span>$</span>100 right now, or $100 a year from now?
+* Correct answer is right now: You could lend that money out and earn interest for the year
+* If interest rate is 10%, you'll end up with <span>$</span>110 after a year instead of $100
+* This implies that <span>$</span>100 now is equal to $110 a year from now
+
+</script></section>
+
+
+
+
 <section data-markdown><script type="text/template">
 
 ## Compound Interest
@@ -426,6 +441,11 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 
 
+<section data-markdown><script type="text/template">
+</script></section>
+
+
+
 
 
 
@@ -439,6 +459,59 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 * Euler: Borrow/lend any ERC-20 asset, Uniswap TWAP Oracle (coming soon)
 
 </script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Solidity Inheritance
+
+    contract A {
+        function func1() private {}
+        function func2() internal {}
+    }
+
+    contract B is A {
+        // func2 is visible, func1 isn't
+    }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Abstract Contracts
+
+* Usually used for base classes
+* Not intended to be instantiated
+* Defines an interface for a class
+      abstract contract BaseToken {
+          function symbol() public virtual returns (string memory);
+      }
+* Note we didn't provide a function body
+* `virtual` means derived classes can override
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Virtual/Override
+
+* Because `BaseToken` didn't implement it, derived contracts *must* implement `symbol()`:
+      contract MyToken is BaseToken {
+          function symbol() public override returns (string memory) {
+              return "SYM";
+          }
+      }
+* `override` means we are overriding a `virtual` method
+* Methods can have both `virtual` and `override`, meaning they could in turn be overridden by another class
+
+</script></section>
+
 
 
 
