@@ -170,7 +170,7 @@ $P'=P(1+\frac{r}{n})^{nt}$
 ## Simple Interest
 
 * Assume we start with 1 dollar ($P=1$) and loan is for 1 year ($t=1$)
-* If we have a 5% interest rate and there is only 1 compounding period, we pay exactly 5% interest:
+* If we have a 5% interest rate and there is only 1 compounding period, we pay or earn exactly 5% interest:
 
 $(1+\frac{0.05}{1})^{1}=1.05$
 
@@ -186,8 +186,8 @@ $(1+\frac{0.05}{1})^{1}=1.05$
 
 $(1+\frac{0.05}{2})^{2}=1.050625$
 
-* In the first period we earn 2.5% interest on the principal
-* In the second period we earn 2.5% interest on the pricipal *and* the interest earned so far
+* In the first period we earn/pay 2.5% interest on the principal
+* In the second period we earn/pay 2.5% interest on the principal *and* the interest from the first payment
 
 </script></section>
 
@@ -201,7 +201,7 @@ $(1+\frac{0.05}{2})^{2}=1.050625$
 
 * Daily: $(1+\frac{0.05}{365})^{365}=1.051267496467463$
 
-* Second: $(1+\frac{0.05}{365 \times 86400})^{365 \times 86400}=1.051271096334355$
+* Per second: $(1+\frac{0.05}{365 \times 86400})^{365 \times 86400}=1.051271096334355$
 
 * Continuous: $e^{0.05} = 1.051271096376024$
 
@@ -222,13 +222,13 @@ $(1+\frac{0.05}{2})^{2}=1.050625$
 
 <section data-markdown><script type="text/template">
 
-## High frequency, on-chain
+## On-chain compounding
 
 * Computing $e^x$ in Solidity is fairly expensive
 * Per-second compounding seems to be a sweet spot
   * Seconds are the smallest time unit possible on the EVM
-  * Can be computed as integer exponentiation
   * Typically within a billionth of a percent of continuous anyway
+  * Can be computed as integer exponentiation
 
 </script></section>
 
@@ -248,6 +248,22 @@ $x^n = x \times x \times x \times ... \times x$
 $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \times x^{\frac{n}{4}} = ... $
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Repeated Squaring in Binary
+
+* Notice in repeated squaring we need to keep halving the exponent until we get down to 1
+* Number of halvings is equal to number of bits
+* Computers store numbers in binary so exponent is already in the right format for us
+  * Just need to loop over the bits in reverse!
+* Advanced modern computer algorithm right?
+  * Nope: described in Hindu text circa 200 BC
+
+</script></section>
+
 
 
 
@@ -290,20 +306,6 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 </script></section>
 
 
-
-
-<section data-markdown><script type="text/template">
-
-## Repeated Squaring in Binary
-
-* Notice in repeated squaring we need to keep halving the exponent until we get down to 1
-* Number of halvings is equal to number of bits
-* Computers store numbers in binary so exponent is already in the right format for us
-  * Just need to loop over the bits in reverse!
-* Advanced modern computer algorithm right?
-  * Nope: described in Hindu text circa 200 BC
-
-</script></section>
 
 
 
@@ -453,7 +455,7 @@ Suppose the price of ETH falls: Amount you could buy for 1000 DAI you can now ge
 * The $3000 of ETH is now worth 3600
 * Implied collateral factor of 0.9: *in violation*!
 1. Liquidators seize 3600 DAI of your collateral, sell it for ETH, and give this back to lenders
-1. You are left with 400 DAI collateral: 600 DAI loss (3x the 200 you would've earned without leverage)
+1. You are left with 400 DAI collateral: 600 DAI loss (3x the 200 loss without leverage)
 
 </script></section>
 
