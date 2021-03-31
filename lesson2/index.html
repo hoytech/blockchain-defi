@@ -126,6 +126,10 @@
 
 ## Lesson Topics
 
+* Time Value of Money
+* Leverage
+* Case Study: Compound
+
 </script></section>
 
 
@@ -295,9 +299,18 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 * Notice in repeated squaring we need to keep halving the exponent until we get down to 1
 * Number of halvings is equal to number of bits
 * Computers store numbers in binary so exponent is already in the right format for us
-  * Just need to loop over the bits!
+  * Just need to loop over the bits in reverse!
 * Advanced modern computer algorithm right?
-  * Not so: described in Hindu text circa 200 BC
+  * Nope: described in Hindu text circa 200 BC
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## 15 minute break
 
 </script></section>
 
@@ -310,7 +323,8 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 * A common use-case for borrowing is "leverage"
 * Investing using borrowed capital
-* Can be very risky
+* Increase profits, but also losses
+  * Can be very risky
 
 </script></section>
 
@@ -334,7 +348,7 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 <section data-markdown><script type="text/template">
 
 * Usually you need to put up some money before you can borrow
-* If the lender requires you to put in $10, then you are 10:1 leveraged
+* If the lender requires you to put in <span>$</span>10 to borrow $100, then you are 10:1 leveraged
 * Price went up 10% but you profited 100%
 
 <img style="background-color: white; border: 0; padding: 40px" src="leverage.svg" />
@@ -349,7 +363,7 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 * On the blockchain, there is no way to repossess tokens transferred to a user
 * Such loans must be fully collateralised
-  * Often over-collateralized
+  * Usually over-collateralized, for safety during big price movements
 * If the prices move against the borrower, their collateral is sold off to recover borrowed assets
   * "Liquidation"
   * Protects lenders
@@ -390,8 +404,10 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 ## Re-supplying Collateral
 
 * You can repeat this until your total DAI collateral is `1000 / (1 - 0.75) = 4000`
-* You will have sold $3000 worth of ETH
-  * Short ETH at 3:1 leverage
+* At this point you will have sold $3000 worth of assets, for example ETH
+  * You are short ETH/DAI at 3:1 leverage
+  * "short" = you want ETH to go down in price, relative to DAI
+  * Equivalently, you are "long" DAI/ETH
 
 </script></section>
 
@@ -401,11 +417,13 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 ## Using Flash Loans
 
-* Rather than repeating this many times, simply use a flash loan:
-1. Flash borrow 4000 DAI, deposit it as collateral
+* Rather than repeat deposit many times, simply use a flash loan:
+1. Flash borrow 4000 DAI
+1. Deposit it as collateral
 1. Borrow $3000 worth of ETH
-1. Sell this ETH for DAI, giving you `3000 + 1000 = 4000` DAI
-1. Pay back the flash loan
+1. Sell this ETH for DAI, giving you 3000 DAI
+1. With this 3000 and your original 1000 DAI, pay back the flash loan
+  * (ignoring flash loan fees)
 
 </script></section>
 
@@ -415,8 +433,9 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 ## Profit Example
 
-* Suppose the price of ETH falls: Amount you could buy for 1000 DAI you can now get for only 800:
-1. Flash borrow amount of ETH you owe: `3000 * .8 = 2400`
+Suppose the price of ETH falls: Amount you could buy for 1000 DAI you can now get for only 800:
+
+1. Flash borrow full amount of ETH owed, worth <span>$</span>2400 ($3000 \times 8$)
 1. Pay back all the ETH you owe
 1. Withdraw 4000 DAI collateral
 1. Convert $2400 worth to ETH, repay flash loan
@@ -434,7 +453,7 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 * The $3000 of ETH is now worth 3600
 * Implied collateral factor of 0.9: *in violation*!
 1. Liquidators seize 3600 DAI of your collateral, sell it for ETH, and give this back to lenders
-1. You are left with 400 DAI collateral: 600 DAI loss
+1. You are left with 400 DAI collateral: 600 DAI loss (3x the 200 you would've earned without leverage)
 
 </script></section>
 
@@ -442,8 +461,27 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 
 <section data-markdown><script type="text/template">
+
+## Carry Trade
+
+* Where you take advantage of interest rate differences
+* Classic example: JPY interest is about 0.1%, AUD interest is 5%
+* Borrow JPY and buy AUD, hold for a year
+* Earn 5%, paying 0.1%
+  * Leverage up to increase profit
+* Risk is price movement in JPY/AUD
+  * Worse with leverage: No free lunch
+
 </script></section>
 
+
+
+
+<section data-markdown><script type="text/template">
+
+## 15 minute break
+
+</script></section>
 
 
 
@@ -463,6 +501,46 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 
 
 
+
+
+
+<section data-markdown><script type="text/template">
+
+## Case Study: Compound
+
+* Money market lending protocol
+* Live in 2019
+* Many billions of dollars worth of "Total Value Locked"
+* Respect governance system, using COMP tokens
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Compound Architecture
+
+<img style="background-color: white; border: 0; padding: 40px" src="compound.svg" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Inherited storage
+
+* The comptroller storage is actually stored in the Unitroller contract
+  * The Comptroller code is invoked by `delegatecall`
+* When the Comptroller is upgraded, it continues to use the old storage
+* Compound is careful to always add new storage variables to the end, and never the middle
+  * That would break the storage after an upgrade
+
+</script></section>
+
+
+
 <section data-markdown><script type="text/template">
 
 ## Solidity Inheritance
@@ -475,6 +553,31 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
     contract B is A {
         // func2 is visible, func1 isn't
     }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Inheritance Order
+
+* Heirarchy ensures ordering of storage variables
+
+      contract ComptrollerV1Storage {
+          uint origVariables;
+          ...
+      }
+
+      contract ComptrollerV2Storage is ComptrollerV1Storage {
+          uint newVariables;
+          ...
+      }
+
+      contract Comptroller is ComptrollerV2Storage
+      }
+
+* Compound released before `abstract` contract feature
 
 </script></section>
 
@@ -513,6 +616,15 @@ $x^n = x^{\frac{n}{2}} \times x^{\frac{n}{2}} = x^{\frac{n}{4}} \times ... \time
 </script></section>
 
 
+
+
+<section data-markdown><script type="text/template">
+
+## Compound Interest Rate Model
+
+<img style="background-color: white; border: 0; padding: 40px" src="compound-irm.svg" />
+
+</script></section>
 
 
 
